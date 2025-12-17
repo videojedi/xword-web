@@ -15,7 +15,9 @@
       "Bash(gh repo create:*)",
       "Bash(git push:*)",
       "Bash(gh repo view:*)",
-      "Bash(GIT_CURL_VERBOSE=1 git push:*)"
+      "Bash(GIT_CURL_VERBOSE=1 git push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

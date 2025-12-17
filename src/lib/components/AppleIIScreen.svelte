@@ -33,7 +33,7 @@
 <style>
   .crt-monitor {
     position: relative;
-    background: linear-gradient(145deg, #d4c8a8, #c4b898);
+    background: linear-gradient(145deg, #c9c198, #b9b188);
     padding: 30px 40px;
     border-radius: 25px;
     box-shadow:
