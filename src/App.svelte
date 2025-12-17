@@ -56,6 +56,14 @@
     min-height: 100vh;
     background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
     padding: 20px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  @media (max-width: 680px) {
+    main {
+      padding: 10px;
+    }
   }
 
   .container {
