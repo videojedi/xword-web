@@ -107,20 +107,21 @@
   @media (max-width: 700px) {
     .crt-monitor {
       transform: scale(0.85);
+      margin-bottom: -10%;
     }
   }
 
   @media (max-width: 500px) {
     .crt-monitor {
       transform: scale(0.65);
-      margin-bottom: -15%;
+      margin-bottom: -22%;
     }
   }
 
   @media (max-width: 400px) {
     .crt-monitor {
       transform: scale(0.52);
-      margin-bottom: -25%;
+      margin-bottom: -32%;
     }
   }
 
@@ -133,9 +134,6 @@
       inset 0 0 80px rgba(0, 40, 0, 0.4),
       inset 0 0 20px rgba(0, 0, 0, 0.8),
       0 0 15px rgba(0, 255, 0, 0.05);
-    /* Subtle fisheye effect */
-    transform: perspective(800px) rotateX(2deg);
-    transform-style: preserve-3d;
   }
 
   /* Curved glass overlay */
