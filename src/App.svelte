@@ -126,12 +126,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     min-height: 100vh;
     background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
     padding: 20px;
     box-sizing: border-box;
     overflow-x: hidden;
+    overflow-y: auto;
   }
 
   @media (max-width: 680px) {
