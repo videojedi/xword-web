@@ -11,6 +11,16 @@
 </script>
 
 <div class="crt-monitor">
+  <div class="apple-logo">
+    <div class="apple-bite"></div>
+    <div class="apple-leaf"></div>
+    <div class="stripe green"></div>
+    <div class="stripe yellow"></div>
+    <div class="stripe orange"></div>
+    <div class="stripe red"></div>
+    <div class="stripe purple"></div>
+    <div class="stripe blue"></div>
+  </div>
   <div class="crt-screen">
     <div class="flicker"></div>
     <div class="screen-content">
@@ -43,6 +53,55 @@
       inset 0 -2px 4px rgba(0, 0, 0, 0.2);
     transform-origin: top center;
   }
+
+  /* Rainbow Apple logo */
+  .apple-logo {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 20px;
+    border-radius: 35% 35% 40% 40%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .apple-bite {
+    position: absolute;
+    right: -4px;
+    top: 6px;
+    width: 6px;
+    height: 6px;
+    background: linear-gradient(145deg, #c9c198, #b9b188);
+    border-radius: 50%;
+    z-index: 10;
+  }
+
+  .apple-leaf {
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    transform: translateX(-30%) rotate(25deg);
+    width: 5px;
+    height: 6px;
+    background: #61BB46;
+    border-radius: 0 80% 0 80%;
+    z-index: 10;
+  }
+
+  .stripe {
+    flex: 1;
+    width: 100%;
+  }
+
+  .stripe.green { background: #61BB46; }
+  .stripe.yellow { background: #FDB827; }
+  .stripe.orange { background: #F5821F; }
+  .stripe.red { background: #E03A3E; }
+  .stripe.purple { background: #963D97; }
+  .stripe.blue { background: #009DDC; }
 
   /* Scale down for smaller screens */
   @media (max-width: 700px) {
