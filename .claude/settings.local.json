@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(node --version:*)",
+      "Bash(npm --version:*)",
+      "Bash(npx create-vite@5:*)",
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "Bash(cat:*)",
+      "Bash(vercel --version:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)"
+    ]
+  }
+}
