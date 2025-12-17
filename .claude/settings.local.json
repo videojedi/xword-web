@@ -10,7 +10,12 @@
       "Bash(cat:*)",
       "Bash(vercel --version:*)",
       "Bash(npm run dev:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh repo create:*)",
+      "Bash(git push:*)",
+      "Bash(gh repo view:*)",
+      "Bash(GIT_CURL_VERBOSE=1 git push:*)"
     ]
   }
 }

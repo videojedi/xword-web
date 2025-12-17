@@ -33,13 +33,13 @@
 <style>
   .crt-monitor {
     position: relative;
-    background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
+    background: linear-gradient(145deg, #d4c8a8, #c4b898);
     padding: 30px 40px;
     border-radius: 25px;
     box-shadow:
-      0 10px 40px rgba(0, 0, 0, 0.8),
-      inset 0 2px 4px rgba(255, 255, 255, 0.05),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.5);
+      0 10px 40px rgba(0, 0, 0, 0.5),
+      inset 0 2px 4px rgba(255, 255, 255, 0.3),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.2);
   }
 
   .crt-screen {
