@@ -2,14 +2,28 @@
 // Words organized by length (3-16) and first-letter bucket (1-8)
 // Buckets: 1=a-b, 2=c-d, 3=e-g, 4=h-k, 5=l-o, 6=p-r, 7=s, 8=t-z
 
+import { loadWordFile, parseWordFile, type ProgressCallback } from './WordFileLoader';
+
 const STORAGE_KEY = 'xword_dictionary';
+const DATA_LOADED_KEY = 'xword_data_loaded';
 
 export class Dictionary {
   // Map key format: "L{length}.{bucket}" matching original ProDOS filenames
   private words: Map<string, string[]> = new Map();
+  private loaded: boolean = false;
 
   constructor() {
-    this.load();
+    this.loadFromStorage();
+  }
+
+  // Check if data files have been loaded
+  isDataLoaded(): boolean {
+    return localStorage.getItem(DATA_LOADED_KEY) === 'true';
+  }
+
+  // Mark data as loaded
+  private markDataLoaded(): void {
+    localStorage.setItem(DATA_LOADED_KEY, 'true');
   }
 
   // Get bucket number (1-8) for a word based on first letter
@@ -112,191 +126,68 @@ export class Dictionary {
     }
   }
 
-  // Load from localStorage
-  private load(): void {
+  // Load from localStorage (synchronous, called from constructor)
+  private loadFromStorage(): void {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const data = JSON.parse(stored) as Record<string, string[]>;
         this.words = new Map(Object.entries(data));
-      } else {
-        // Load initial sample words
-        this.loadSampleWords();
+        this.loaded = true;
       }
     } catch (e) {
-      console.error('Failed to load dictionary:', e);
-      this.loadSampleWords();
+      console.error('Failed to load dictionary from storage:', e);
     }
   }
 
-  // Load sample crossword words
-  private loadSampleWords(): void {
-    const sampleWords = [
-      // 3-letter words
-      'ace', 'add', 'age', 'aid', 'aim', 'air', 'all', 'and', 'ant', 'any',
-      'ape', 'arc', 'are', 'ark', 'arm', 'art', 'ash', 'ask', 'ate', 'awe',
-      'axe', 'bad', 'bag', 'ban', 'bar', 'bat', 'bay', 'bed', 'bee', 'bet',
-      'bid', 'big', 'bin', 'bit', 'bow', 'box', 'boy', 'bud', 'bug', 'bus',
-      'but', 'buy', 'cab', 'can', 'cap', 'car', 'cat', 'cop', 'cow', 'cry',
-      'cub', 'cup', 'cut', 'dad', 'dam', 'day', 'den', 'dew', 'did', 'die',
-      'dig', 'dim', 'dip', 'dog', 'dot', 'dry', 'dub', 'due', 'dug', 'dye',
-      'ear', 'eat', 'eel', 'egg', 'ego', 'elk', 'elm', 'emu', 'end', 'era',
-      'eve', 'eye', 'fad', 'fan', 'far', 'fat', 'fax', 'fed', 'fee', 'few',
-      'fig', 'fin', 'fir', 'fit', 'fix', 'fly', 'foe', 'fog', 'for', 'fox',
-      'fry', 'fun', 'fur', 'gap', 'gas', 'get', 'gin', 'got', 'gum', 'gun',
-      'gut', 'guy', 'gym', 'had', 'ham', 'has', 'hat', 'hay', 'hen', 'her',
-      'hid', 'him', 'hip', 'his', 'hit', 'hog', 'hop', 'hot', 'how', 'hub',
-      'hue', 'hug', 'hut', 'ice', 'icy', 'ill', 'imp', 'ink', 'inn', 'ion',
-      'its', 'ivy', 'jab', 'jam', 'jar', 'jaw', 'jay', 'jet', 'jig', 'job',
-      'jog', 'joy', 'jug', 'key', 'kid', 'kin', 'kit', 'lab', 'lad', 'lag',
-      'lap', 'law', 'lay', 'lea', 'led', 'leg', 'let', 'lid', 'lie', 'lip',
-      'lit', 'log', 'lot', 'low', 'lug', 'mad', 'man', 'map', 'mat', 'may',
-      'men', 'met', 'mid', 'mix', 'mob', 'mom', 'mop', 'mud', 'mug', 'nab',
-      'nag', 'nap', 'net', 'new', 'nil', 'nip', 'nod', 'nor', 'not', 'now',
-      'nut', 'oak', 'oar', 'oat', 'odd', 'ode', 'off', 'oft', 'oil', 'old',
-      'one', 'opt', 'orb', 'ore', 'our', 'out', 'owe', 'owl', 'own', 'pad',
-      'pal', 'pan', 'par', 'pat', 'paw', 'pay', 'pea', 'peg', 'pen', 'pep',
-      'per', 'pet', 'pie', 'pig', 'pin', 'pit', 'ply', 'pod', 'pop', 'pot',
-      'pro', 'pry', 'pub', 'pun', 'pup', 'put', 'rag', 'ram', 'ran', 'rap',
-      'rat', 'raw', 'ray', 'red', 'ref', 'rib', 'rid', 'rig', 'rim', 'rip',
-      'rob', 'rod', 'rot', 'row', 'rub', 'rug', 'run', 'rut', 'rye', 'sad',
-      'sag', 'sap', 'sat', 'saw', 'say', 'sea', 'set', 'sew', 'she', 'shy',
-      'sin', 'sip', 'sir', 'sis', 'sit', 'six', 'ski', 'sky', 'sly', 'sob',
-      'sod', 'son', 'sop', 'sot', 'sow', 'soy', 'spa', 'spy', 'sub', 'sue',
-      'sum', 'sun', 'tab', 'tad', 'tag', 'tan', 'tap', 'tar', 'tax', 'tea',
-      'ten', 'the', 'thy', 'tic', 'tie', 'tin', 'tip', 'toe', 'ton', 'too',
-      'top', 'tow', 'toy', 'try', 'tub', 'tug', 'two', 'urn', 'use', 'van',
-      'vat', 'vet', 'via', 'vie', 'vow', 'wad', 'wag', 'war', 'was', 'wax',
-      'way', 'web', 'wed', 'wet', 'who', 'why', 'wig', 'win', 'wit', 'woe',
-      'wok', 'won', 'woo', 'wow', 'yak', 'yam', 'yap', 'yaw', 'yea', 'yes',
-      'yet', 'yew', 'yin', 'you', 'zap', 'zed', 'zen', 'zip', 'zoo',
-      // 4-letter words
-      'able', 'ache', 'acid', 'aged', 'aide', 'also', 'area', 'army', 'away',
-      'baby', 'back', 'bake', 'ball', 'band', 'bank', 'bare', 'barn', 'base',
-      'bath', 'beam', 'bean', 'bear', 'beat', 'beef', 'been', 'beer', 'bell',
-      'belt', 'bend', 'bent', 'best', 'bill', 'bind', 'bird', 'bite', 'blow',
-      'blue', 'boat', 'body', 'bold', 'bomb', 'bond', 'bone', 'book', 'boom',
-      'boot', 'bore', 'born', 'boss', 'both', 'bowl', 'bulk', 'burn', 'bush',
-      'busy', 'cafe', 'cage', 'cake', 'call', 'calm', 'came', 'camp', 'card',
-      'care', 'case', 'cash', 'cast', 'cave', 'cell', 'chip', 'city', 'clay',
-      'club', 'clue', 'coal', 'coat', 'code', 'coin', 'cold', 'come', 'cook',
-      'cool', 'cope', 'copy', 'core', 'corn', 'cost', 'crop', 'cure', 'dark',
-      'data', 'date', 'dawn', 'days', 'dead', 'deal', 'dean', 'dear', 'debt',
-      'deck', 'deep', 'deer', 'deny', 'desk', 'dial', 'diet', 'dirt', 'dish',
-      'disk', 'dock', 'does', 'done', 'door', 'dose', 'down', 'draw', 'drew',
-      'drop', 'drug', 'drum', 'dual', 'duck', 'dull', 'dust', 'duty', 'each',
-      'earn', 'ease', 'east', 'easy', 'edge', 'edit', 'else', 'even', 'ever',
-      'evil', 'exam', 'exit', 'face', 'fact', 'fade', 'fail', 'fair', 'fake',
-      'fall', 'fame', 'farm', 'fast', 'fate', 'fear', 'feat', 'feed', 'feel',
-      'feet', 'fell', 'felt', 'file', 'fill', 'film', 'find', 'fine', 'fire',
-      'firm', 'fish', 'five', 'flag', 'flat', 'fled', 'flew', 'flip', 'flow',
-      'fold', 'folk', 'food', 'fool', 'foot', 'ford', 'form', 'fort', 'foul',
-      'four', 'free', 'from', 'fuel', 'full', 'fund', 'gain', 'game', 'gang',
-      'gate', 'gave', 'gear', 'gene', 'gift', 'girl', 'give', 'glad', 'glow',
-      'goal', 'goat', 'goes', 'gold', 'golf', 'gone', 'good', 'grab', 'gray',
-      'grew', 'grey', 'grid', 'grin', 'grip', 'grow', 'gulf', 'hair', 'half',
-      'hall', 'hand', 'hang', 'hard', 'harm', 'hate', 'have', 'head', 'heal',
-      'hear', 'heat', 'heel', 'held', 'hell', 'help', 'here', 'hero', 'hide',
-      'high', 'hill', 'hint', 'hire', 'hold', 'hole', 'holy', 'home', 'hope',
-      'horn', 'host', 'hour', 'huge', 'hung', 'hunt', 'hurt', 'icon', 'idea',
-      'inch', 'into', 'iron', 'item', 'jack', 'jail', 'jane', 'jean', 'jobs',
-      'john', 'join', 'joke', 'josh', 'jump', 'june', 'jury', 'just', 'keen',
-      'keep', 'kent', 'kept', 'kick', 'kill', 'kind', 'king', 'knee', 'knew',
-      'knit', 'know', 'lack', 'lady', 'laid', 'lake', 'lamp', 'land', 'lane',
-      'last', 'late', 'lawn', 'lead', 'leaf', 'lean', 'leap', 'left', 'lend',
-      'lens', 'less', 'life', 'lift', 'like', 'limb', 'lime', 'line', 'link',
-      'lion', 'list', 'live', 'load', 'loan', 'lock', 'logo', 'long', 'look',
-      'loop', 'lord', 'lose', 'loss', 'lost', 'lots', 'loud', 'love', 'luck',
-      'made', 'mail', 'main', 'make', 'male', 'mall', 'many', 'mark', 'mars',
-      'mask', 'mass', 'mate', 'math', 'meal', 'mean', 'meat', 'meet', 'menu',
-      'mere', 'mess', 'mild', 'mile', 'milk', 'mill', 'mind', 'mine', 'mint',
-      'miss', 'mode', 'mood', 'moon', 'more', 'most', 'move', 'much', 'must',
-      'myth', 'nail', 'name', 'navy', 'near', 'neat', 'neck', 'need', 'nest',
-      'news', 'next', 'nice', 'nick', 'nine', 'node', 'none', 'noon', 'nose',
-      'note', 'noun', 'odds', 'okay', 'once', 'ones', 'only', 'onto', 'open',
-      'oral', 'oven', 'over', 'pace', 'pack', 'page', 'paid', 'pain', 'pair',
-      'pale', 'palm', 'park', 'part', 'pass', 'past', 'path', 'peak', 'peer',
-      'pick', 'pile', 'pine', 'pink', 'pipe', 'pity', 'plan', 'play', 'plea',
-      'plot', 'plug', 'plus', 'poem', 'poet', 'pole', 'poll', 'pond', 'pool',
-      'poor', 'pope', 'pork', 'port', 'pose', 'post', 'pour', 'pray', 'pull',
-      'pump', 'pure', 'push', 'quit', 'race', 'rack', 'rage', 'raid', 'rail',
-      'rain', 'rank', 'rare', 'rate', 'read', 'real', 'rear', 'rely', 'rent',
-      'rest', 'rice', 'rich', 'ride', 'ring', 'riot', 'rise', 'risk', 'road',
-      'rock', 'rode', 'role', 'roll', 'roof', 'room', 'root', 'rope', 'rose',
-      'rule', 'rush', 'safe', 'saga', 'sage', 'said', 'sail', 'sake', 'sale',
-      'salt', 'same', 'sand', 'sang', 'save', 'scan', 'seal', 'seat', 'seed',
-      'seek', 'seem', 'seen', 'self', 'sell', 'send', 'sent', 'sept', 'ship',
-      'shop', 'shot', 'show', 'shut', 'sick', 'side', 'sigh', 'sign', 'silk',
-      'sing', 'sink', 'site', 'size', 'skin', 'slip', 'slow', 'snap', 'snow',
-      'soft', 'soil', 'sold', 'sole', 'some', 'song', 'soon', 'sort', 'soul',
-      'span', 'spin', 'spot', 'star', 'stay', 'stem', 'step', 'stir', 'stop',
-      'such', 'suit', 'sure', 'swim', 'tail', 'take', 'tale', 'talk', 'tall',
-      'tank', 'tape', 'task', 'team', 'tear', 'tech', 'tell', 'temp', 'tend',
-      'tent', 'term', 'test', 'text', 'than', 'that', 'them', 'then', 'they',
-      'thin', 'this', 'thus', 'tide', 'tile', 'till', 'time', 'tiny', 'tire',
-      'to', 'told', 'toll', 'tone', 'took', 'tool', 'tops', 'tore', 'torn',
-      'tour', 'town', 'trap', 'tree', 'trim', 'trip', 'true', 'tube', 'tune',
-      'turn', 'twin', 'type', 'unit', 'upon', 'used', 'user', 'vary', 'vast',
-      'very', 'vice', 'view', 'vote', 'wage', 'wait', 'wake', 'walk', 'wall',
-      'want', 'ward', 'warm', 'warn', 'wash', 'wave', 'weak', 'wear', 'week',
-      'well', 'went', 'were', 'west', 'what', 'when', 'whom', 'wide', 'wife',
-      'wild', 'will', 'wind', 'wine', 'wing', 'wire', 'wise', 'wish', 'with',
-      'woke', 'wolf', 'wood', 'wool', 'word', 'wore', 'work', 'worn', 'wrap',
-      'yard', 'yeah', 'year', 'yoga', 'your', 'zero', 'zone', 'zoom',
-      // 5-letter words (common crossword words)
-      'about', 'above', 'abuse', 'actor', 'acute', 'admit', 'adopt', 'adult',
-      'after', 'again', 'agent', 'agree', 'ahead', 'alarm', 'album', 'alert',
-      'alien', 'align', 'alike', 'alive', 'alley', 'allow', 'alloy', 'alone',
-      'along', 'alter', 'among', 'angel', 'anger', 'angle', 'angry', 'anime',
-      'apart', 'apple', 'apply', 'arena', 'argue', 'arise', 'armor', 'array',
-      'arrow', 'aside', 'asset', 'atlas', 'audio', 'audit', 'avoid', 'award',
-      'aware', 'awful', 'bacon', 'badge', 'basic', 'basin', 'basis', 'beach',
-      'beard', 'beast', 'begin', 'being', 'belly', 'below', 'bench', 'berry',
-      'birth', 'black', 'blade', 'blame', 'blank', 'blast', 'blaze', 'bleed',
-      'blend', 'bless', 'blind', 'blink', 'block', 'blond', 'blood', 'bloom',
-      'blown', 'blues', 'blunt', 'blush', 'board', 'boast', 'bonus', 'booth',
-      'bored', 'bound', 'brain', 'brake', 'brand', 'brass', 'brave', 'bread',
-      'break', 'breed', 'brick', 'bride', 'brief', 'bring', 'broad', 'broke',
-      'brook', 'broom', 'brown', 'brush', 'build', 'built', 'bunch', 'burst',
-      'buyer', 'cabin', 'cable', 'cache', 'camel', 'canal', 'candy', 'cargo',
-      'carry', 'carve', 'catch', 'cause', 'chain', 'chair', 'charm', 'chart',
-      'chase', 'cheap', 'cheat', 'check', 'cheek', 'cheer', 'chess', 'chest',
-      'chief', 'child', 'china', 'choir', 'chord', 'chose', 'chunk', 'civic',
-      'civil', 'claim', 'clash', 'class', 'clean', 'clear', 'clerk', 'click',
-      'cliff', 'climb', 'cling', 'clock', 'close', 'cloth', 'cloud', 'clown',
-      'coach', 'coast', 'color', 'colon', 'comet', 'coral', 'couch', 'cough',
-      'could', 'count', 'court', 'cover', 'crack', 'craft', 'crane', 'crash',
-      'crawl', 'crazy', 'cream', 'creek', 'creep', 'crest', 'crime', 'crisp',
-      'cross', 'crowd', 'crown', 'crude', 'cruel', 'crush', 'curve', 'cycle',
-      'daily', 'dairy', 'dance', 'dated', 'dealt', 'death', 'debut', 'decay',
-      'decor', 'delay', 'demon', 'dense', 'depot', 'depth', 'derby', 'desk',
-      'devil', 'diary', 'digit', 'dirty', 'disco', 'ditch', 'diver', 'dizzy',
-      'dodge', 'doing', 'donor', 'doubt', 'dough', 'dozen', 'draft', 'drain',
-      'drama', 'drank', 'drawn', 'dread', 'dream', 'dress', 'dried', 'drift',
-      'drill', 'drink', 'drive', 'drown', 'drunk', 'dying', 'eager', 'eagle',
-      'early', 'earth', 'eaten', 'eater', 'edge', 'eight', 'elbow', 'elder',
-      'elect', 'elite', 'email', 'ember', 'empty', 'ended', 'enemy', 'enjoy',
-      'enter', 'entry', 'equal', 'equip', 'erase', 'error', 'essay', 'ethos',
-      'event', 'every', 'exact', 'exert', 'exist', 'extra', 'fable', 'faced',
-      'facet', 'faith', 'false', 'famed', 'fancy', 'fault', 'favor', 'feast',
-      'fence', 'ferry', 'fetch', 'fever', 'fiber', 'field', 'fiery', 'fifth',
-      'fifty', 'fight', 'final', 'first', 'fixed', 'flame', 'flash', 'flask',
-      'fleet', 'flesh', 'float', 'flock', 'flood', 'floor', 'flora', 'flour',
-      'flown', 'fluid', 'flush', 'flute', 'focus', 'foggy', 'force', 'forge',
-      'forth', 'forty', 'forum', 'found', 'frame', 'frank', 'fraud', 'freak',
-      'fresh', 'fried', 'front', 'frost', 'fruit', 'fully', 'funny', 'fuzzy',
-      'ghost', 'giant', 'given', 'gland', 'glare', 'glass', 'gleam', 'glide',
-      'globe', 'glory', 'gloss', 'glove', 'going', 'golden', 'goods', 'goose',
-      'grace', 'grade', 'grain', 'grand', 'grant', 'grape', 'graph', 'grasp',
-      'grass', 'grave', 'great', 'greed', 'greek', 'green', 'greet', 'grief',
-      'grill', 'grind', 'groan', 'groom', 'gross', 'group', 'grove', 'growl',
-      'grown', 'guard', 'guess', 'guest', 'guide', 'guild', 'guilt', 'guise'
-    ];
+  // Load a single file from DATA directory
+  async loadFile(length: number, bucket: number): Promise<number> {
+    const key = `L${length}.${bucket}`;
 
-    // Add all sample words
-    for (const word of sampleWords) {
-      this.addWord(word);
+    // Skip if already loaded
+    if (this.words.has(key) && this.words.get(key)!.length > 0) {
+      return this.words.get(key)!.length;
     }
+
+    try {
+      const words = await loadWordFile(length, bucket);
+      if (words.length > 0) {
+        this.words.set(key, words);
+        this.save();
+        return words.length;
+      }
+    } catch (e) {
+      console.warn(`Failed to load ${key}:`, e);
+    }
+
+    return 0;
+  }
+
+  // Load all word files from DATA directory
+  async loadAllFiles(onProgress?: (file: string, count: number) => void): Promise<void> {
+    for (let length = 3; length <= 16; length++) {
+      for (let bucket = 1; bucket <= 8; bucket++) {
+        const count = await this.loadFile(length, bucket);
+        if (onProgress) {
+          onProgress(`L${length}.${bucket}`, count);
+        }
+      }
+    }
+    this.markDataLoaded();
+    this.loaded = true;
+  }
+
+  // Legacy load method - no longer loads sample words
+  private load(): void {
+    this.loadFromStorage();
+  }
+
+  // Reset dictionary - clears localStorage flags to force reload
+  resetAndReload(): void {
+    localStorage.removeItem(DATA_LOADED_KEY);
+    localStorage.removeItem(STORAGE_KEY);
+    this.words.clear();
+    this.loaded = false;
   }
 
   // Clear the dictionary

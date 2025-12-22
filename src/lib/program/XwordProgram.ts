@@ -69,14 +69,36 @@ export class XwordProgram {
     }
   }
 
-  // Simulate loading files from disk
+  // Load word files from DATA directory
   private async runLoadingSequence(): Promise<void> {
-    for (let length = 3; length <= 8; length++) {
-      for (let bucket = 1; bucket <= 8; bucket++) {
-        this.terminal.HOME();
-        this.terminal.VTAB(12);
-        this.terminal.PRINT(`        LOADING FILE L${length}.${bucket} INTO RAM`);
-        await this.terminal.wait(30); // Quick loading simulation
+    // If data is already loaded from localStorage, just show quick animation
+    if (this.dictionary.isDataLoaded()) {
+      for (let length = 3; length <= 16; length++) {
+        for (let bucket = 1; bucket <= 8; bucket++) {
+          this.terminal.HOME();
+          this.terminal.VTAB(12);
+          const count = this.dictionary.getFileCount(length, bucket);
+          this.terminal.PRINT(`        LOADING FILE L${length}.${bucket} INTO RAM`);
+          await this.terminal.wait(5); // Very quick for cached data
+        }
+      }
+    } else {
+      // Actually load files from DATA directory
+      for (let length = 3; length <= 16; length++) {
+        for (let bucket = 1; bucket <= 8; bucket++) {
+          this.terminal.HOME();
+          this.terminal.VTAB(12);
+          this.terminal.PRINT(`        LOADING FILE L${length}.${bucket} INTO RAM`);
+
+          // Actually load the file
+          const count = await this.dictionary.loadFile(length, bucket);
+
+          this.terminal.VTAB(14);
+          this.terminal.HTAB(12);
+          this.terminal.PRINT(`${count} WORDS LOADED`);
+
+          await this.terminal.wait(15); // Brief pause to show progress
+        }
       }
     }
     await this.terminal.wait(200);

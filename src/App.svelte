@@ -108,7 +108,7 @@
     </div>
   {/if}
   <footer>
-    <p>xWord - Crossword Solving Aid</p>
+    <p>xWord - Crossword Solving Aid v1.0</p>
     <p>By C.A.SMALL (1988)</p>
     <p class="hint">{isMobile ? 'Tap keys above to navigate' : 'Press keys A-E to select menu options'}</p>
     <button class="code-btn" on:click={openCodeViewer} on:mousedown|stopPropagation>
