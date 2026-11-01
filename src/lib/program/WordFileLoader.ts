@@ -10,29 +10,18 @@ export type ProgressCallback = (progress: LoadProgress) => void;
 
 /**
  * Parse a word file content into individual words
- * Format: "1109aamamaabbabcabu..." where 1109 is the count and words are concatenated
+ * Format: "1109\raam\rama\r..." - Apple II text, CR-separated.
+ * First line is the count (+1000 offset), then one word per line
  */
 export function parseWordFile(content: string, wordLength: number): string[] {
-  // Find where the count ends and words begin
-  // The count is at the start, followed by concatenated words
-  // We can determine the split by finding where letters start
-  const match = content.match(/^(\d+)/);
-  if (!match) {
+  const lines = content.split(/\r\n|\r|\n/);
+  if (!/^\d+$/.test(lines[0])) {
     return [];
   }
 
-  const wordData = content.slice(match[1].length);
-  const words: string[] = [];
-
-  // Split into words of the specified length
-  for (let i = 0; i < wordData.length; i += wordLength) {
-    const word = wordData.slice(i, i + wordLength);
-    if (word.length === wordLength && /^[a-z]+$/.test(word)) {
-      words.push(word);
-    }
-  }
-
-  return words;
+  return lines
+    .slice(1)
+    .filter(word => word.length === wordLength && /^[a-z]+$/.test(word));
 }
 
 /**

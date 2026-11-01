@@ -5,7 +5,8 @@
 import { loadWordFile, parseWordFile, type ProgressCallback } from './WordFileLoader';
 
 const STORAGE_KEY = 'xword_dictionary';
-const DATA_LOADED_KEY = 'xword_data_loaded';
+// Bump the version to force cached dictionaries to re-merge the DATA files
+const DATA_LOADED_KEY = 'xword_data_loaded_v2';
 
 export class Dictionary {
   // Map key format: "L{length}.{bucket}" matching original ProDOS filenames
@@ -22,7 +23,7 @@ export class Dictionary {
   }
 
   // Mark data as loaded
-  private markDataLoaded(): void {
+  markDataLoaded(): void {
     localStorage.setItem(DATA_LOADED_KEY, 'true');
   }
 
@@ -141,26 +142,24 @@ export class Dictionary {
   }
 
   // Load a single file from DATA directory
+  // Merges with any cached words so user-added words are kept
   async loadFile(length: number, bucket: number): Promise<number> {
     const key = `L${length}.${bucket}`;
-
-    // Skip if already loaded
-    if (this.words.has(key) && this.words.get(key)!.length > 0) {
-      return this.words.get(key)!.length;
-    }
+    const existing = this.words.get(key) || [];
 
     try {
       const words = await loadWordFile(length, bucket);
       if (words.length > 0) {
-        this.words.set(key, words);
+        const merged = Array.from(new Set([...existing, ...words])).sort();
+        this.words.set(key, merged);
         this.save();
-        return words.length;
+        return merged.length;
       }
     } catch (e) {
       console.warn(`Failed to load ${key}:`, e);
     }
 
-    return 0;
+    return existing.length;
   }
 
   // Load all word files from DATA directory

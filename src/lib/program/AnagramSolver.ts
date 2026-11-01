@@ -5,7 +5,8 @@
 import { getDictionary, Dictionary } from './Dictionary';
 
 // Prime numbers for each letter position (a=2, b=3, c=5, ...)
-// From original BASIC code lines 150-190
+// Original BASIC (lines 150-190) used a=1, b=2, c=3, d=5...; both are unique
+// for same-length words
 const PRIMES = [
   2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
   31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
@@ -51,18 +52,21 @@ export class AnagramSolver {
     // Calculate target hash
     const targetHash = this.calculateHash(normalized);
 
-    // Determine which buckets might contain anagrams
-    // Based on sorted letters, find unique first letters
-    const sortedLetters = normalized.split('').sort();
-    const bucketsToSearch = this.getBucketsFromLetters(sortedLetters);
+    // Only search buckets containing one of our letters, and stop
+    // once words start past the highest letter we have in that bucket
+    const maxLetters = this.getMaxLettersPerBucket(normalized);
+    const bucketsToSearch = Array.from(maxLetters.keys()).sort((a, b) => a - b);
 
     const matches: string[] = [];
 
-    // Search relevant buckets
+    // Search relevant buckets (words are stored sorted)
     for (const bucket of bucketsToSearch) {
       const words = this.dictionary.getWords(length, bucket);
+      const maxLetter = maxLetters.get(bucket)!;
 
       for (const word of words) {
+        if (word[0] > maxLetter) break;
+
         const wordHash = this.calculateHash(word);
         if (wordHash === targetHash) {
           // Hash matches - this is an anagram
@@ -72,18 +76,6 @@ export class AnagramSolver {
     }
 
     return matches;
-  }
-
-  // Determine which buckets to search based on available letters
-  // An anagram can only start with letters we have
-  private getBucketsFromLetters(sortedLetters: string[]): number[] {
-    const buckets = new Set<number>();
-
-    for (const letter of sortedLetters) {
-      buckets.add(Dictionary.getBucket(letter));
-    }
-
-    return Array.from(buckets).sort((a, b) => a - b);
   }
 
   // Get the highest letter in each bucket from the input

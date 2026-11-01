@@ -100,6 +100,7 @@ export class XwordProgram {
           await this.terminal.wait(15); // Brief pause to show progress
         }
       }
+      this.dictionary.markDataLoaded();
     }
     await this.terminal.wait(200);
     this.state = ProgramState.MAIN_MENU;
